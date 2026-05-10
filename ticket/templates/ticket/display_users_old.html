@@ -1,0 +1,287 @@
+{% extends "ticket/main.html" %}
+
+{% block content %}
+
+<style type="text/css">
+  th {
+    font-size: 12px;
+  }
+  td {
+    font-size: 12px;
+  },
+
+  </style>
+
+
+
+
+
+  <div class="container-fluid">   
+    <section class="content">
+      <div class="row">
+        <div class="col-12">
+             
+          <div class="alert alert-customsuccess"  id="entry_success" style="display:None;">
+            <center>Password Changed</center>
+          </div>
+       
+
+          <div class="card card-secondary">
+            <div class="card-header" style="background-color:#064478;">
+              <div style="float: left;margin-left: 3%;"> <h3 class="card-title"><b style="color: white">Users</b></h3>
+              </div>
+              <div style="margin-left: 95%">
+                <a href="{%url 'display_add_user'%}"><i class="fa fa-plus"></i></a>
+              </div>
+            </div>
+            <div class="card-body">
+              <form action="{%url 'display_users'%}" method="POST">
+              {% csrf_token %}
+              <div class="row">
+
+                <div class="col-2">
+                  <label>Enter Login</label>
+                  <input type="text" class="form-control" name="login_for_user" id="login_for_user" placeholder="Enter Login ID" autocomplete="off">
+                </div>
+
+                
+                <div class="col-2">
+                  <select class="form-control" style="margin-top: 31px;" name="select_type_user" id="select_type_user">
+                    <option value="">Select</option>
+                    <option value="All">All</option>
+                  </select>
+                </div>  
+
+
+
+                <div class="col-2">
+                  <button type="submit" class="btn btn-primary" style="margin-top: 30px;">Search</button>
+                </div>
+              </div>
+            </form>
+              <hr/>
+              <table id="displayuser" class="table table-bordered" style="width: 100%;">
+                <thead>
+                  <tr>
+                    <th scope="col" >login</th>
+                    <th scope="col" >name</th>
+                    <th scope="col" >role</th>
+                    <th scope="col">Edit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {%for us in all_users%}
+                  {%if us.role_id != 6%}
+                  <tr>
+                    <td>{{us.login}}</td>
+                    <td>{{us.username}}</td>
+                    <td>{{us.role.role_title}}</td>
+             
+
+                    <td> <a style="color:#064478;cursor: pointer;" id="info_for_update_user" data-custom-value="{{us.id}}" data-toggle="modal" data-target=".bd-example-modal-lg">
+                      <i class="fa fa-edit"></i></a>
+                       <a style="color:#A9A9A9;cursor: pointer;" id="info_for_password_reset" data-custom-value="{{us.login}}">
+                      <i class="fa fa-key"></i></a></td>
+                    </tr>
+                    {%endif%}
+                    {%endfor%}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+     <!-- Large modal -->
+<!-- <button type="button" class="btn btn-primary" data-toggle="modal" data-target=".bd-example-modal-lg">Large modal</button>
+-->
+<div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true" id="myModal" >
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Update User</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+
+        <div class="row" style="margin-left:10px;margin-top: 10px;">
+
+          
+          <div class="col-4">
+            <label>Name</label>
+            <input type="text" class="form-control" id="update_name_id" name="update_name_id" autocomplete="off">
+          </div>  
+
+
+
+          <div class="col-4">
+            <label>Login</label>
+            <input type="text" class="form-control" id="update_login_id" name="update_login_id" autocomplete="off">
+          </div>
+
+
+          <div class="col-4">
+            <label>Role</label>
+            <select class="form-control" id="update_role_id" name="update_role_id">
+              <option value="">Select</option>
+              {%for us in all_roles%}
+              {%if us.id != 6%}
+              <option value={{us.id}}>{{us.role_title}}</option>
+              {%endif%}
+              {%endfor%}
+            </select>
+          </div>
+
+           <div class="col-4">
+            <input type="hidden" class="form-control" id="update_user_id" name="update_user_id" autocomplete="off">
+          </div>
+
+        </div>
+
+
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-dismiss="modal" id="close_info">Close</button>
+        <button type="button" class="btn btn-primary" id="update_info">Update</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+
+
+<script type="text/javascript">
+// alert({{ request.get_full_path }});
+
+
+  $(document).on('click', '#info_for_password_reset', function(){
+
+    login = $(this).attr('data-custom-value');
+    if (confirm('Are you sure you want to reset password to default one ?')) {
+
+    $.ajax({
+    url: '{{BASE_URL}}/change_password/',
+    type: 'GET', // This is the default though, you don't actually need to always mention it
+    data: {
+    login: login
+    },
+    success: function(data) {  
+        $("#entry_success").show().delay(3000).fadeOut();
+    },
+    failure: function (data) {
+    alert('Got an error dude');
+    }
+    });
+    }
+    else {
+
+    }
+
+  });
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+    $(document).on('click', '#info_for_update_user', function(){
+
+    user_id = $(this).attr('data-custom-value');
+    $('#update_name_id').val("");
+    $('#update_login_id').val("");
+    $('#update_role_id').val("");
+    $('#update_user_id').val("");
+
+    var csrftoken = $("[name=csrfmiddlewaretoken]").val();
+    $.ajax({
+      url: '{{BASE_URL}}/get_values_for_user_updation/',
+      type: 'GET', // This is the default though, you don't actually need to always mention it
+      headers: {
+        "X-CSRFToken": csrftoken
+      },
+      data: {
+        user_id: user_id
+      },
+      success: function(data) {
+
+        $('#update_name_id').val(data[0].username);   
+        $('#update_login_id').val(data[0].login);
+        $('#update_role_id').val(data[0].role).attr("selected","selected");
+        $('#update_user_id').val(data[0].id);
+      },
+      failure: function (data) {
+        alert('Got an error dude');
+      }
+      });
+
+      });
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+  
+  $(document).on('click', '#update_info', function(){
+
+  var v_update_name_id = $("#update_name_id").val();
+  var v_update_login_id = $("#update_login_id").val();
+  var v_update_role_id = $("#update_role_id").val();
+  var user_id = $("#update_user_id").val();
+
+  var csrftoken = $("[name=csrfmiddlewaretoken]").val();
+
+  if(v_update_name_id == '' || v_update_login_id == '' || v_update_role_id == '')
+  {
+    alert('Please complete all fields');
+    return false;
+  }
+
+
+  else {
+    $.ajax({
+      url: '{{BASE_URL}}/update_user_response/',
+      type: 'GET', // This is the default though, you don't actually need to always mention it
+      headers: {
+        "X-CSRFToken": csrftoken
+      },
+      data: {
+        v_update_name_id:v_update_name_id,
+        v_update_login_id: v_update_login_id,
+        v_update_role_id: v_update_role_id,
+        user_id:user_id
+      },
+      success: function(data) {
+        if(data.success)
+        {
+          alert('successfully updated');
+          $('#close_info').click();
+          location.reload();
+        }
+
+        if(data.duplicate)
+        {
+          alert('Duplicate entry for same login');
+        }
+        },
+        failure: function (data) {
+          alert('Got an error dude');
+        }
+        });
+          }
+        }); 
+
+
+
+</script>
+
+{% endblock %}

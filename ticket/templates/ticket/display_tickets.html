@@ -1,0 +1,458 @@
+{% extends "ticket/main.html" %}
+
+{% block content %}
+
+<style>
+
+  
+  .widget-flat {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease-in-out;
+    border: none;
+  }
+  
+  
+  .widget-icon {
+    font-size: 48px;
+    opacity: 0.2;
+    position: absolute;
+    right: 20px;
+    top: 20px;
+  }
+  
+  .badge {
+    padding: 6px 12px;
+    font-weight: 500;
+    border-radius: 6px;
+  }
+
+  
+  .btn-close {
+    background: transparent;
+  }
+  
+
+  th { font-size: 12px; }
+  td { font-size: 12px; }
+
+  .filter-box {
+    background: #fff;
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+
+  .table-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+  }
+
+  .modal-content {
+    border-radius: 10px;
+  }
+
+
+</style>
+
+
+
+<div class="container-fluid">
+
+  <!-- Success alert -->
+  <div class="alert alert-success text-center mt-3" id="entry_success" style="display:none;">
+    Response Submitted Successfully
+  </div>
+
+  <!-- Page title -->
+  <div class="page-title-box">
+    <div class="page-title-right">
+      <span class="text-muted">Ticket Management System</span>
+    </div>
+    <h4 class="page-title">Ticket Management Dashboard</h4>
+  </div>
+
+  <!-- Dashboard Stats Row -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card widget-flat bg-primary text-white">
+        <div class="card-body">
+          <div class="float-end">
+            <i class="ri-ticket-line widget-icon text-white"></i>
+          </div>
+          <h5 class="text-white-50 fw-normal mt-0" title="Total Tickets">Total Tickets</h5>
+          <h3 class="mt-3 mb-3 text-white">{{ total_tickets }}</h3>
+          <p class="mb-0 text-white-50">
+            <span class="text-white">All tickets</span> in system
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card widget-flat bg-warning text-white">
+        <div class="card-body">
+          <div class="float-end">
+            <i class="ri-time-line widget-icon text-white"></i>
+          </div>
+          <h5 class="text-white-50 fw-normal mt-0" title="Pending Tickets">Pending</h5>
+          <h3 class="mt-3 mb-3 text-white">{{ pending }}</h3>
+          <p class="mb-0 text-white-50">
+            <span class="text-white">Awaiting resolution</span>
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card widget-flat bg-success text-white">
+        <div class="card-body">
+          <div class="float-end">
+            <i class="ri-checkbox-circle-line widget-icon text-white"></i>
+          </div>
+          <h5 class="text-white-50 fw-normal mt-0" title="Resolved Tickets">Resolved</h5>
+          <h3 class="mt-3 mb-3 text-white">{{ resolved }}</h3>
+          <p class="mb-0 text-white-50">
+            <span class="text-white">Completed tickets</span>
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card widget-flat bg-danger text-white">
+        <div class="card-body">
+          <div class="float-end">
+            <i class="ri-alert-line widget-icon text-white"></i>
+          </div>
+          <h5 class="text-white-50 fw-normal mt-0" title="Critical Tickets">Critical</h5>
+          <h3 class="mt-3 mb-3 text-white">{{ critical }}</h3>
+          <p class="mb-0 text-white-50">
+            <span class="text-white">7+ days pending</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Section -->
+  <div class="card">
+    <div class="card-body">
+      <form action="{% url 'filtertickets' %}" method="POST" class="row g-3 align-items-end">
+        {% csrf_token %}
+        
+        <div class="col-md-3">
+          <label  class="form-label">Status</label>
+          <select class="form-select" name="status" >
+            <option value="2" {% if selected_status == 2 %}selected{% endif %}>All Tickets</option>
+            <option value="0" {% if selected_status == 0 %}selected{% endif %}>Pending Tickets</option>
+            <option value="1" {% if selected_status == 1 %}selected{% endif %}>Resolved Tickets</option>
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label for="start" class="form-label">Start Date</label>
+          <input type="date" class="form-control" name="start" id="start" value="{{ start_date|date:'Y-m-d' }}"  style="display: block; width: 100%;">
+        </div>
+
+        <div class="col-md-3">
+          <label for="end" class="form-label">End Date</label>
+          <input type="date" class="form-control" name="end" id="end" value="{{ end_date|date:'Y-m-d' }}"  style="display: block; width: 100%;">
+        </div>
+
+        <div class="col-md-3">
+          <button type="submit" class="btn btn-primary">
+            <i></i> Submit
+          </button>
+          <a id="reset_id" class="btn btn-outline-secondary ms-2" style="cursor: pointer;">
+            <i class="ri-refresh-line me-1"></i> Reset
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tickets Table -->
+  <div class="card">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <h5 class="card-title mb-0">Tickets List</h5>
+      <i class="ri-ticket-line fs-5"></i>
+    </div>
+
+    <div class="card-body">
+      <div class="table-responsive">
+        <table id="displayuser" class="table align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Complainant Name</th>
+              <th>Number</th>
+              <th>Category</th>
+              <th>Division</th>
+              <th>District</th>
+              <th>City</th>
+              <th>Status</th>
+              <th>Aging</th>
+              <th>Reason</th>
+              <th>Actions</th>
+      
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in tickets %}
+           <tr style="background-color: {% if item.ticket.resolution_status == 0 %}{% if item.color == 'red' %}#f8d7da{% elif item.color == 'orange' %}#ffe5b4{% elif item.color == 'yellow' %}#fff3cd{% else %}#d4edda{% endif %}{% endif %} !important;">
+              <td>{{ item.ticket.id }}</td>
+              <td>{{ item.ticket.complainant_name }}</td>
+              <td>{{ item.ticket.complainant_number }}</td>
+              <td>{{ item.ticket.complaint_category.description }}</td>
+              <td>{{ item.ticket.division.description }}</td>
+              <td>{{ item.ticket.district.description }}</td>
+              <td>{{ item.ticket.city.description }}</td>
+              <td>
+                {% if item.ticket.resolution_status == 0 %}
+                  <span class="badge bg-warning">Pending</span>
+                {% else %}
+                  <span class="badge bg-success">Resolved</span>
+                {% endif %}
+              </td>
+              <td>
+              
+                  {{ item.aging }}
+            
+              </td>
+              <td>{{ item.ticket.reason|truncatechars:50 }}</td>
+              {% if item.ticket.resolution_status == 0 %}
+              {%if request.user.role.id != 5%}
+              <td>
+                <a class="text-primary evaluate-ticket-btn" style="cursor:pointer;" data-ticket-id="{{ item.ticket.id }}">
+                  <i class="ri-edit-2-line"></i>
+                </a>
+              </td>
+              {%endif%}
+              {%endif%}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Response Modal -->
+<div class="modal fade" id="responseModal" tabindex="-1" aria-labelledby="responseModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title" id="responseModalLabel">Ticket Response</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label for="complainant_name" class="form-label">Name</label>
+            <input type="text" class="form-control" id="complainant_name" readonly>
+          </div>
+
+          <div class="col-md-4">
+            <label for="complainant_number" class="form-label">Number</label>
+            <input type="text" class="form-control" id="complainant_number" readonly>
+          </div>
+
+          <div class="col-md-4">
+            <label for="complaint_category" class="form-label">Category</label>
+            <input type="text" class="form-control" id="complaint_category" readonly>
+          </div>
+
+          <div class="col-md-4">
+            <label for="division" class="form-label">Division</label>
+            <input type="text" class="form-control" id="division" readonly>
+          </div>
+
+          <div class="col-md-4">
+            <label for="district" class="form-label">District</label>
+            <input type="text" class="form-control" id="district" readonly>
+          </div>
+
+          <div class="col-md-4">
+            <label for="city" class="form-label">City</label>
+            <input type="text" class="form-control" id="city" readonly>
+          </div>
+
+    
+          <div class="col-md-4">
+            <label for="duration_since_issue" class="form-label">Duration Since Issue</label>
+            <input type="text" class="form-control" id="duration_since_issue" readonly>
+          </div>
+
+          <div class="col-12">
+            <label for="reason" class="form-label">Reason</label>
+            <textarea class="form-control" id="reason" rows="3" readonly></textarea>
+          </div>
+
+          <hr class="mt-2">
+
+          <div class="col-md-4">
+            <label for="field_attended_by" class="form-label">Field Attended By</label>
+            <input type="text" class="form-control" id="field_attended_by">
+          </div>
+
+          <div class="col-md-4">
+            <label for="desigination" class="form-label">Designation</label>
+            <input type="text" class="form-control" id="desigination">
+          </div>
+
+          <div class="col-md-4">
+            <label for="response_status" class="form-label">Response Status</label>
+            <select class="form-control" id="response_status">
+              <option value="">Select</option>
+              {% for us in all_responses %}
+              <option value="{{ us.id }}">{{ us.description }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <input type="hidden" id="reported_by_field_staff" value="No">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="update_info">Submit Response</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Script -->
+<script type="text/javascript">
+$(document).ready(function() {
+  // Debug: Check if elements exist
+
+
+  // Reset button functionality
+  $(document).on('click', '#reset_id', function(e) {
+    e.preventDefault();
+    window.location.reload();
+  });
+
+  // Modal trigger for ticket evaluation
+  $(document).on('click', '.evaluate-ticket-btn', function(e) {
+    e.preventDefault();
+    
+    var ticket_id = $(this).data('ticket-id');
+    console.log("Ticket ID clicked:", ticket_id);
+    
+    // Clear form fields
+    $('#complainant_name').val("");
+    $('#complainant_number').val("");
+    $('#complaint_category').val("");
+    $('#division').val("");
+    $('#district').val("");
+    $('#city').val("");
+    $('#duration_since_issue').val("");
+    $('#reason').val("");
+    $('#field_attended_by').val("");
+    $('#desigination').val("");
+    $('#response_status').val("");
+    
+    var csrftoken = $("[name=csrfmiddlewaretoken]").val();
+    
+    $.ajax({
+      url: '{{ BASE_URL }}/get_values_for_ticket_updation/',
+      type: 'GET',
+      headers: {
+        "X-CSRFToken": csrftoken
+      },
+      data: {
+        ticket_id: ticket_id
+      },
+      success: function(data) {
+        console.log("Data received:", data);
+        if(data && data.length > 0) {
+          $('#complainant_name').val(data[0].complainant_name || '');
+          $('#complainant_number').val(data[0].complainant_number || '');
+          $('#complaint_category').val(data[0].complaint_category__description || '');
+          $('#division').val(data[0].division__description || '');
+          $('#district').val(data[0].district__description || '');
+          $("#city").val(data[0].city__description || '');
+          $("#duration_since_issue").val(data[0].issue_duration || '');
+          $("#reason").val(data[0].reason || '');
+          
+          // Open modal after data is loaded
+          $('#responseModal').modal('show');
+        } else {
+          alert('No data found for this ticket');
+        }
+      },
+      error: function(xhr, status, error) {
+        console.log("Error:", error);
+        alert('Error fetching ticket details: ' + error);
+      }
+    });
+  });
+
+  // Response status change handler
+  $(document).on('change', '#response_status', function() {
+    var response_status_value = $(this).val();
+    if(response_status_value == 1) {
+      $("#reported_by_field_staff").val('Yes');
+    } else {
+      $("#reported_by_field_staff").val('No');
+    }
+  });
+
+  // Update info submission
+  $(document).on('click', '#update_info', function() {
+    var complainant_number_v = $("#complainant_number").val();
+    var field_attended_by_v = $("#field_attended_by").val();
+    var desigination_v = $("#desigination").val();
+    var response_status_v = $("#response_status").val();
+    var reported_by_field_staff_v = $("#reported_by_field_staff").val();
+
+    if(field_attended_by_v == '' || desigination_v == '' || response_status_v == '') {
+      alert('Please complete all fields');
+      return false;
+    }
+    
+    var csrftoken = $("[name=csrfmiddlewaretoken]").val();
+    
+    $.ajax({
+      url: '{{ BASE_URL }}/update_response/',
+      type: 'GET',
+      headers: {
+        "X-CSRFToken": csrftoken
+      },
+      data: {
+        complainant_number_v: complainant_number_v,
+        field_attended_by_v: field_attended_by_v,
+        desigination_v: desigination_v,
+        response_status_v: response_status_v,
+        reported_by_field_staff_v: reported_by_field_staff_v,
+      },
+      success: function(data) {
+        if(data.success) {
+          alert("Response Saved Successfully")
+          $("#entry_success").show().delay(3000).fadeOut();
+          $('#responseModal').modal('hide');
+          setTimeout(function() {
+            location.reload();
+          }, 1000);
+        } else {
+          alert('Error saving data');
+        }
+      },
+      error: function(xhr, status, error) {
+        console.log("Error:", error);
+        alert('Got an error: ' + error);
+      }
+    });
+  });
+});
+</script>
+
+
+
+{% endblock %}

@@ -1,0 +1,252 @@
+{% extends "ticket/main.html" %}
+
+{% block content %}
+
+<style>
+  th, td {
+    font-size: 13px;
+    vertical-align: middle !important;
+  }
+
+  .card {
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  .card-header {
+    background: linear-gradient(90deg, #064478, #0a6aa1);
+    color: white;
+    border-radius: 10px 10px 0 0;
+  }
+
+  .form-control {
+    border-radius: 6px;
+  }
+
+  .btn {
+    border-radius: 6px;
+  }
+
+  .table thead {
+    background-color: #f4f6f9;
+  }
+
+  .table tbody tr:hover {
+    background-color: #f1f5f9;
+  }
+
+  label {
+    font-weight: 500;
+    font-size: 13px;
+  }
+
+  .filter-box {
+    padding: 15px;
+    background: #f9fbfd;
+    border-radius: 8px;
+    margin: 10px;
+  }
+</style>
+
+<div class="container-fluid">
+  <section class="content">
+    <div class="row">
+      <div class="col-12">
+
+        <div class="card card-secondary">
+
+          <!-- HEADER -->
+          <div class="card-header">
+            <h5 class="mb-0"><b>Tickets</b></h5>
+          </div>
+
+          <br/>
+
+          <!-- FILTER -->
+          <form action="{% url 'filtertickets' %}" method="POST">
+            {% csrf_token %}
+
+            <div class="filter-box">
+              <div class="row align-items-end">
+
+                <div class="col-md-3">
+                  <label>Start Date</label>
+                  <input type="date" name="start" id="start" class="form-control" required>
+                </div>
+
+                <div class="col-md-3">
+                  <label>End Date</label>
+                  <input type="date" name="end" id="end" class="form-control" required>
+                </div>
+
+                <div class="col-md-3">
+                  <button type="submit" class="btn btn-primary mt-4 w-100">Submit</button>
+                </div>
+
+                <div class="col-md-3">
+                  <a id="reset_id" class="btn btn-outline-success mt-4 w-100">
+                    <i class="fas fa-redo-alt"></i> Reset
+                  </a>
+                </div>
+
+              </div>
+            </div>
+          </form>
+
+          <!-- TABLE -->
+          <div class="card-body">
+            <div class="table-responsive">
+              <table id="displayuser" class="table table-striped table-bordered table-hover">
+                <thead class="text-center">
+                  <tr>
+                    <th>ID</th>
+                    <th>Complainant Name</th>
+                    <th>Number</th>
+                    <th>Category</th>
+                    <th>Division</th>
+                    <th>District</th>
+                    <th>City</th>
+                    <th>Status</th>
+                    <th>Duration (Days)</th>
+                    <th>Reason</th>
+                    <th>Response</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {% for us in Tickets %}
+                  <tr>
+                    <td>{{us.id}}</td>
+                    <td>{{us.complainant_name}}</td>
+                    <td>{{us.complainant_number}}</td>
+                    <td>{{us.complaint_category.description}}</td>
+                    <td>{{us.division.description}}</td>
+                    <td>{{us.district.description}}</td>
+                    <td>{{us.city.description}}</td>
+                    <td>{{us.ticket_status.description}}</td>
+                    <td>{{us.issue_duration}}</td>
+                    <td>{{us.reason}}</td>
+
+                    <td class="text-center">
+                      <button type="button"
+                        class="btn btn-sm btn-outline-primary"
+                        id="evaluate_ticket"
+                        data-custom-value="{{us.id}}"
+                        data-toggle="modal"
+                        data-target=".bd-example-modal-lg">
+                        <i class="fa fa-edit"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- MODAL -->
+<div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" id="myModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Ticket Response</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="row">
+
+          <div class="col-md-3 form-group">
+            <label>Name</label>
+            <input type="text" class="form-control" id="complainant_name" readonly>
+          </div>
+
+          <div class="col-md-3 form-group">
+            <label>Number</label>
+            <input type="text" class="form-control" id="complainant_number" readonly>
+          </div>
+
+          <div class="col-md-3 form-group">
+            <label>Category</label>
+            <input type="text" class="form-control" id="complaint_category" readonly>
+          </div>
+
+          <div class="col-md-3 form-group">
+            <label>Division</label>
+            <input type="text" class="form-control" id="division" readonly>
+          </div>
+
+          <div class="col-md-3 form-group">
+            <label>District</label>
+            <input type="text" class="form-control" id="district" readonly>
+          </div>
+
+          <div class="col-md-3 form-group">
+            <label>City</label>
+            <input type="text" class="form-control" id="city" readonly>
+          </div>
+
+          <div class="col-md-3 form-group">
+            <label>Status</label>
+            <input type="text" class="form-control" id="ticket_status" readonly>
+          </div>
+
+          <div class="col-md-3 form-group">
+            <label>Duration</label>
+            <input type="text" class="form-control" id="duration_since_issue" readonly>
+          </div>
+
+        </div>
+
+        <div class="form-group">
+          <label>Reason</label>
+          <textarea class="form-control" id="reason" rows="3" readonly></textarea>
+        </div>
+
+        <hr/>
+
+        <div class="row">
+
+          <div class="col-md-4 form-group">
+            <label>Field Attended By</label>
+            <input type="text" class="form-control" id="field_attended_by">
+          </div>
+
+          <div class="col-md-4 form-group">
+            <label>Designation</label>
+            <input type="text" class="form-control" id="desigination">
+          </div>
+
+          <div class="col-md-4 form-group">
+            <label>Response Status</label>
+            <select class="form-control" id="response_status">
+              <option value="">Select</option>
+              {% for us in all_responses %}
+              <option value="{{us.id}}">{{us.description}}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-success" id="update_info">Submit</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

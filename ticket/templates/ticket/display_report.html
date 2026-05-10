@@ -1,0 +1,44 @@
+{% extends "ticket/main.html" %}
+
+{% block content %}
+<div class="container-fluid">
+
+  <!-- Page Title -->
+  <div class="page-title-box d-flex justify-content-between align-items-center">
+    <h4 class="page-title"><i class="ri-file-download-line me-1"></i> Export Tickets</h4>
+  </div>
+
+  <!-- Export Form Card -->
+  <div class="card">
+    <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between">
+      <h5 class="card-title mb-0">Generate Ticket Report</h5>
+    </div>
+
+    <div class="card-body">
+      <form action="{% url 'export_report_ticket' %}" method="GET" autocomplete="off">
+        {% csrf_token %}
+        <div class="row g-3 align-items-end">
+
+          <div class="col-md-3">
+            <label for="from" class="form-label">Start Date</label>
+            <input type="date" class="form-control" id="from" name="from" required>
+          </div>
+
+          <div class="col-md-3">
+            <label for="to" class="form-label">End Date</label>
+            <input type="date" class="form-control" id="to" name="to" required>
+          </div>
+
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-success w-100">
+              <i class="ri-file-excel-2-line me-1"></i> Export
+            </button>
+          </div>
+
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

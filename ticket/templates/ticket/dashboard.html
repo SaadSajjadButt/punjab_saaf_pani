@@ -1,0 +1,386 @@
+{% extends "ticket/main.html" %}
+{% load static %}
+
+{% block content %}
+<script src="{% static 'velonic/chart_cms.js' %}"></script>
+
+<style>
+
+/* ===== Layout ===== */
+
+/* ===== Filter Bar ===== */
+.filter-bar {
+    background: #ffffff;
+    padding: 12px 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+/* ===== Cards ===== */
+.card {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    transition: all 0.25s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+
+/* ===== KPI Cards ===== */
+.stat-card {
+    color: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card h5 {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.stat-card h2 {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.stat-icon {
+    position: absolute;
+    right: 15px;
+    bottom: 10px;
+    font-size: 40px;
+    opacity: 0.2;
+}
+
+/* Gradient Themes */
+.bg-blue { background: linear-gradient(135deg, #007bff, #00c6ff); }
+.bg-green { background: linear-gradient(135deg, #28a745, #7ddc6f); }
+.bg-orange { background: linear-gradient(135deg, #ff9800, #ffc107); }
+.bg-red { background: linear-gradient(135deg, #dc3545, #ff6b6b); }
+
+/* ===== Chart Headers ===== */
+.card-header {
+    font-weight: 600;
+    background: transparent;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+/* ===== Buttons ===== */
+.btn-secondary {
+    border-radius: 20px;
+    font-size: 12px;
+    padding: 4px 12px;
+}
+
+/* ===== Chart Canvas Fix ===== */
+canvas {
+    max-height: 300px;
+}
+
+/* ===== Section spacing ===== */
+.section {
+    margin-bottom: 20px;
+}
+
+
+
+/* ===== KPI WRAPPER ===== */
+.kpi-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px;
+}
+
+/* ===== KPI TILE ===== */
+.kpi-tile {
+    padding: 16px;
+    border-radius: 14px;
+    color: #fff;
+    position: relative;
+
+    /* Glass + depth */
+    backdrop-filter: blur(10px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+/* Hover */
+.kpi-tile:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
+
+/* Header */
+.kpi-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+/* Icon */
+.kpi-header i {
+    font-size: 18px;
+    opacity: 0.7;
+}
+
+/* Number */
+.kpi-number {
+    font-size: 30px;
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+/* Bottom accent bar */
+.kpi-bar {
+    height: 4px;
+    width: 40px;
+    margin-top: 10px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.6);
+}
+
+/* Strong gradients */
+.bg-blue { background: linear-gradient(135deg, #0056b3, #0099ff) !important; }
+.bg-green { background: linear-gradient(135deg, #1e7e34, #28a745) !important; }
+.bg-orange { background: linear-gradient(135deg, #e68900, #ffb300) !important; }
+.bg-red { background: linear-gradient(135deg, #c82333, #ff4d4d) !important; }
+
+
+.management-dashboard-header {
+    font-family: 'Poppins', sans-serif;
+}
+
+.management-dashboard-header h2 {
+    margin: 0;
+}
+
+.management-dashboard-header small {
+    font-size: 0.9rem;
+}
+
+</style>
+
+<div class="container-fluid">
+
+<!-- ===== Management Dashboard Header ===== -->
+<div class="row mb-4 mt-3">
+  <div class="col-12">
+    <div class="card border-0 shadow-sm" style="border-radius: 14px; background: linear-gradient(135deg, #f8f9fa, #ffffff);">
+      <div class="card-body d-flex align-items-center justify-content-between flex-wrap py-3 px-4">
+
+        <!-- Title Section -->
+        <div>
+          <h2 class="fw-semibold mb-1" style="letter-spacing: 0.5px;">
+            Management Dashboard
+          </h2>
+          <small class="text-muted">Overview & analytics</small>
+        </div>
+
+        <!-- Icon Section -->
+        <div class="text-end">
+          <div style="
+            background: rgba(13,110,253,0.1);
+            padding: 10px;
+            border-radius: 12px;
+            display: inline-block;
+          ">
+            <i class="ri-user-3-line text-primary fs-2"></i>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+    <!-- ===== Filter ===== -->
+    <form method="get" class="row g-2 align-items-center filter-bar mb-4">
+        <div class="col-md-2">
+            <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+        </div>
+        <div class="col-md-2">
+            <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100">
+                <i class="fas fa-filter"></i> Filter
+            </button>
+        </div>
+    </form>
+
+    <!-- ===== KPI CARDS ===== -->
+    <div class="kpi-wrapper section">
+    {% for stat in stats %}
+    <div class="kpi-tile {{ stat.bg_class }}">
+
+        <div class="kpi-header">
+            <span>{{ stat.title }}</span>
+            <i class="{{ stat.icon }}"></i>
+        </div>
+
+        <div class="kpi-number">
+            {{ stat.count }}
+        </div>
+
+        <div class="kpi-bar"></div>
+
+    </div>
+    {% endfor %}
+    </div>
+
+    <!-- ===== Drilldown Charts ===== -->
+    <div class="row section">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <span>Zone → Division</span>
+                    <button id="zoneBackBtn" class="btn btn-secondary" style="display:none;">Back</button>
+                </div>
+                <div class="card-body">
+                    <canvas id="zoneChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <span>District → City</span>
+                    <button id="districtBackBtn" class="btn btn-secondary" style="display:none;">Back</button>
+                </div>
+                <div class="card-body">
+                    <canvas id="districtChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Other Charts ===== -->
+    <div class="row section">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Complaint Categories</div>
+                <div class="card-body">
+                    <canvas id="categoryPieChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Feedback Satisfaction</div>
+                <div class="card-body">
+                    <canvas id="feedbackChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Line Chart ===== -->
+    <div class="row section">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">Resolved Tickets Trend</div>
+                <div class="card-body">
+                    <canvas id="resolvedLineChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+</div>
+
+<script>
+
+
+
+const colors = ['#007bff','#28a745','#ffc107','#dc3545','#17a2b8','#6f42c1','#fd7e14'];
+
+// ===== Zone Drilldown =====
+const zoneCtx = document.getElementById('zoneChart');
+let zoneChart = new Chart(zoneCtx, {
+    type:'bar',
+    data:{labels:{{ zone_labels|safe }}, datasets:[{data:{{ zone_data|safe }}, backgroundColor:colors}]},
+    options:{
+        plugins:{legend:{display:false}},
+        onClick:(evt,e)=>{
+            if(e.length){
+                let i=e[0].index;
+                zoneChart.data.labels={{ division_drill_labels|safe }}[i];
+                zoneChart.data.datasets[0].data={{ division_drill_data|safe }}[i];
+                zoneChart.update();
+                zoneBackBtn.style.display='inline-block';
+            }
+        }
+    }
+});
+
+zoneBackBtn.onclick=()=>{
+    zoneChart.data.labels={{ zone_labels|safe }};
+    zoneChart.data.datasets[0].data={{ zone_data|safe }};
+    zoneChart.update();
+    zoneBackBtn.style.display='none';
+};
+
+// ===== District Drilldown =====
+const districtCtx=document.getElementById('districtChart');
+let districtChart=new Chart(districtCtx,{
+    type:'bar',
+    data:{labels:{{ district_labels|safe }}, datasets:[{data:{{ district_data|safe }}, backgroundColor:colors}]},
+    options:{
+        plugins:{legend:{display:false}},
+        onClick:(evt,e)=>{
+            if(e.length){
+                let i=e[0].index;
+                districtChart.data.labels={{ city_drill_labels|safe }}[i];
+                districtChart.data.datasets[0].data={{ city_drill_data|safe }}[i];
+                districtChart.update();
+                districtBackBtn.style.display='inline-block';
+            }
+        }
+    }
+});
+
+districtBackBtn.onclick=()=>{
+    districtChart.data.labels={{ district_labels|safe }};
+    districtChart.data.datasets[0].data={{ district_data|safe }};
+    districtChart.update();
+    districtBackBtn.style.display='none';
+};
+
+// ===== Other Charts =====
+new Chart(document.getElementById('categoryPieChart'), {
+    type:'pie',
+    data:{labels:{{ category_labels|safe }}, datasets:[{data:{{ category_data|safe }}, backgroundColor:colors}]}
+});
+
+new Chart(document.getElementById('feedbackChart'), {
+    type:'doughnut',
+    data:{labels:['Satisfied','Dissatisfied'], datasets:[{data:{{ feedback_data|safe }}, backgroundColor:['#28a745','#dc3545']}]}
+});
+
+new Chart(document.getElementById('resolvedLineChart'), {
+    type:'line',
+    data:{
+        labels:{{ resolved_dates|safe }},
+        datasets:[{
+            label:'Resolved Tickets',
+            data:{{ resolved_counts|safe }},
+            borderColor:'#007bff',
+            backgroundColor:'rgba(0,123,255,0.1)',
+            fill:true,
+            tension:0.4
+        }]
+    }
+});
+</script>
+
+{% endblock %}

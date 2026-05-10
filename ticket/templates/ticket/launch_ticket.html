@@ -1,0 +1,234 @@
+{% extends "ticket/main.html" %}
+
+{% block content %}
+<div class="container-fluid">
+
+  <!-- Page Title -->
+  <div class="page-title-box">
+    <h4 class="page-title">Add Ticket</h4>
+  </div>
+
+  <!-- Alerts -->
+  {% if ticket_success %}
+  <div class="alert alert-success text-center" id="entry_success">
+    Ticket Submitted
+  </div>
+  {% endif %}
+
+  {% if error_message %}
+  <div class="alert alert-danger text-center" id="entry_failure">
+    {{ error_message }}
+  </div>
+  {% endif %}
+
+  <!-- Add Ticket Card -->
+  <div class="card">
+    <div class="card-header bg-primary text-white d-flex align-items-center justify-content-between">
+      <h5 class="card-title mb-0">New Ticket</h5>
+    </div>
+
+    <div class="card-body">
+
+      <form method="POST" action="{% url 'addtickets' %}" id="ticket_form" onsubmit="disableButton()" autocomplete="off">
+        {% csrf_token %}
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label for="complainant_name" class="form-label">Complainant Name *</label>
+            <input type="text" class="form-control" id="complainant_name" name="complainant_name" required>
+          </div>
+
+          <div class="col-md-4">
+            <label for="complainant_number" class="form-label">Complainant Number *</label>
+             <input type="text"
+             class="form-control"
+             id="complainant_number"
+             name="complainant_number"
+             pattern="\d{11}"
+             title="Please enter exactly 11 digits"
+             required>
+          </div>
+
+          <div class="col-md-4">
+            <label for="complaint_category" class="form-label">Complaint Category *</label>
+            <select class="form-select" id="complaint_category" name="complaint_category" required>
+              <option value="">Select</option>
+              {% for us in Categories %}
+                <option value="{{ us.id }}">{{ us.description }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          
+         <div class="col-md-4">
+            <label for="zone_id" class="form-label">Zone *</label>
+            <select class="form-select" id="zone_id" name="zone_id" required>
+              <option value="">Select</option>
+              {% for us in Zone %}
+                <option value="{{ us.id }}">{{ us.description }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+
+
+          <div class="col-md-4">
+            <label for="division_id" class="form-label">Division *</label>
+            <select class="form-select" id="division_id" name="division_id" required>
+              <option value="">Select</option>
+                <div id="division_content_id"></div>
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label for="district_id" class="form-label">District *</label>
+            <select class="form-select" id="district_id" name="district_id" required>
+              <option value="">Select</option>
+              <div id="district_content_id"></div>
+            </select>
+          </div>
+        </div>
+
+
+
+        <div class="row g-3 mb-3">
+          
+
+          <div class="col-md-4">
+            <label for="city_id" class="form-label">City *</label>
+            <select class="form-select" id="city_id" name="city_id" required>
+              <option value="">Select</option>
+              <div id="city_content_id"></div>
+            </select>
+          </div>
+
+
+
+
+          <div class="col-md-4">
+            <label for="plant_address" class="form-label">Plant Address *</label>
+            <input type="text" class="form-control" id="plant_address" name="plant_address" required>
+          </div>
+
+          <div class="col-md-4">
+            <label for="code" class="form-label">Code</label>
+            <input type="text" class="form-control" id="code" name="code">
+          </div>
+
+        </div>
+
+        <div class="row g-3 mb-4">
+          
+
+          <div class="col-md-4">
+            <label for="duration_since_issue" class="form-label">Duration Since Issue (Days)</label>
+            <input type="number" class="form-control" id="duration_since_issue" name="duration_since_issue" min="0" required>
+          </div>
+
+
+          <div class="col-md-8">
+            <label for="reason_id" class="form-label">Reason *</label>
+            <textarea class="form-control" id="reason_id" name="reason_id" rows="3" required></textarea>
+          </div>
+        </div>
+
+        <div class="text-end">
+          <button type="submit" class="btn btn-success" id="submitBtn">
+            <i class="ri-ticket-2-line me-1"></i> Submit Ticket
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script type="text/javascript">
+  $("#entry_success, #entry_failure").delay(3000).fadeOut();
+
+ 
+   // Fetch divisions for selected zone
+  $('#zone_id').on('change', function () {
+    const csrftoken = $("[name=csrfmiddlewaretoken]").val();
+    const zone_id = $(this).val();
+    $("#division_id").empty().append("<option value=''>Select</option>");
+    $("#district_id").empty().append("<option value=''>Select</option>");
+    $("#city_id").empty().append("<option value=''>Select</option>");
+
+    $.ajax({
+      url: '{{ BASE_URL }}/get_child_divisions_for_zone/',
+      type: 'GET',
+      headers: { "X-CSRFToken": csrftoken },
+      data: { zone_id },
+      success: function (data) {
+        $.each(data, function (index, item) {
+          $("#division_id").append(`<option value='${item.id}'>${item.description}</option>`);
+        });
+      },
+      error: function () {
+        alert('Error loading districts.');
+      }
+    });
+  });
+
+
+
+
+
+
+
+  // Fetch districts for selected division
+  $('#division_id').on('change', function () {
+    const csrftoken = $("[name=csrfmiddlewaretoken]").val();
+    const division_id = $(this).val();
+    $("#district_id").empty().append("<option value=''>Select</option>");
+    $("#city_id").empty().append("<option value=''>Select</option>");
+
+    $.ajax({
+      url: '{{ BASE_URL }}/get_child_districts_for_division/',
+      type: 'GET',
+      headers: { "X-CSRFToken": csrftoken },
+      data: { division_id },
+      success: function (data) {
+        $.each(data, function (index, item) {
+          $("#district_id").append(`<option value='${item.id}'>${item.description}</option>`);
+        });
+      },
+      error: function () {
+        alert('Error loading districts.');
+      }
+    });
+  });
+
+  // Fetch cities for selected district
+  $('#district_id').on('change', function () {
+    const csrftoken = $("[name=csrfmiddlewaretoken]").val();
+    const district_id = $(this).val();
+    $("#city_id").empty().append("<option value=''>Select</option>");
+
+    $.ajax({
+      url: '{{ BASE_URL }}/get_child_cities_for_district/',
+      type: 'GET',
+      headers: { "X-CSRFToken": csrftoken },
+      data: { district_id },
+      success: function (data) {
+        $.each(data, function (index, item) {
+          $("#city_id").append(`<option value='${item.id}'>${item.description}</option>`);
+        });
+      },
+      error: function () {
+        alert('Error loading cities.');
+      }
+    });
+  });
+
+  // Disable submit button to prevent multiple submissions
+  function disableButton() {
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    btn.innerHTML = "<i class='ri-loader-4-line ri-spin me-1'></i> Submitting...";
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,209 @@
+{% extends "ticket/main.html" %}
+
+{% block content %}
+<div class="container-fluid">
+
+  <!-- Success alert -->
+  <div class="alert alert-success text-center mt-3" id="entry_success" style="display:none;">
+    Password Changed
+  </div>
+
+  <!-- Page title -->
+  <div class="page-title-box">
+    <div class="page-title-right">
+      <a href="{% url 'display_add_user' %}" class="btn btn-primary btn-sm">
+        <i class="ri-add-line"></i> Add User
+      </a>
+    </div>
+    <h4 class="page-title">User Management</h4>
+  </div>
+
+  <!-- Search Section -->
+  <div class="card">
+    <div class="card-body">
+      <form action="{% url 'display_users' %}" method="POST" class="row g-3 align-items-end">
+        {% csrf_token %}
+        <div class="col-md-3">
+          <label for="login_for_user" class="form-label">Enter Login</label>
+          <input type="text" class="form-control" name="login_for_user" id="login_for_user" placeholder="Enter Login ID" autocomplete="off">
+        </div>
+
+        <div class="col-md-3">
+          <label for="select_type_user" class="form-label">Type</label>
+          <select class="form-select" name="select_type_user" id="select_type_user">
+            <option value="">Select</option>
+            <option value="All">All</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary">
+            <i class="ri-search-line me-1"></i> Search
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <div class="card">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <h5 class="card-title mb-0">Users</h5>
+      <a href="{% url 'display_add_user' %}" class="text-white fs-5"><i class="ri-add-circle-line"></i></a>
+    </div>
+
+    <div class="card-body">
+      <div class="table-responsive">
+        <table id="displayuser" class="table table-striped table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Login</th>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for us in all_users %}
+              {% if us.role_id != 1 %}
+              <tr>
+                <td>{{ us.login }}</td>
+                <td>{{ us.username }}</td>
+                <td>{{ us.role.role_title }}</td>
+
+
+
+                <td>
+                  <a class="text-primary me-2" id="info_for_update_user" data-custom-value="{{ us.id }}" data-bs-toggle="modal" data-bs-target="#userUpdateModal">
+                    <i class="ri-edit-2-line"></i>
+                  </a>
+                  <a class="text-warning" id="info_for_password_reset" data-custom-value="{{ us.login }}">
+                    <i class="ri-key-line"></i>
+                  </a>
+                </td>
+              </tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Update User Modal -->
+<div class="modal fade" id="userUpdateModal" tabindex="-1" aria-labelledby="userUpdateModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title" id="userUpdateModalLabel">Update User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label for="update_name_id" class="form-label">Name</label>
+            <input type="text" class="form-control" id="update_name_id" name="update_name_id">
+          </div>
+
+          <div class="col-md-4">
+            <label for="update_login_id" class="form-label">Login</label>
+            <input type="text" class="form-control" id="update_login_id" name="update_login_id">
+          </div>
+
+          <div class="col-md-4">
+            <label for="update_role_id" class="form-label">Role</label>
+            <select class="form-select" id="update_role_id" name="update_role_id">
+              <option value="">Select</option>
+              {% for us in all_roles %}
+                {% if us.id != 1 %}
+                  <option value="{{ us.id }}">{{ us.role_title }}</option>
+                {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+
+          <input type="hidden" id="update_user_id" name="update_user_id">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="update_info">Update</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Script -->
+<script type="text/javascript">
+  $(document).on('click', '#info_for_password_reset', function() {
+    let login = $(this).attr('data-custom-value');
+    if (confirm('Are you sure you want to reset password to default one?')) {
+      $.ajax({
+        url: '{{ BASE_URL }}/change_password/',
+        type: 'GET',
+        data: { login: login },
+        success: function(data) {
+          $("#entry_success").show().delay(3000).fadeOut();
+        },
+        error: function() {
+          alert('Error occurred while resetting the password.');
+        }
+      });
+    }
+  });
+
+  $(document).on('click', '#info_for_update_user', function() {
+    let user_id = $(this).attr('data-custom-value');
+    $('#update_user_id').val(user_id);
+    $('#update_name_id, #update_login_id, #update_role_id').val('');
+
+    $.ajax({
+      url: '{{ BASE_URL }}/get_values_for_user_updation/',
+      type: 'GET',
+      data: { user_id },
+      success: function(data) {
+        $('#update_name_id').val(data[0].username);
+        $('#update_login_id').val(data[0].login);
+        $('#update_role_id').val(data[0].role);
+      },
+      error: function() {
+        alert('Could not fetch user details.');
+      }
+    });
+  });
+
+  $(document).on('click', '#update_info', function() {
+    let name = $('#update_name_id').val();
+    let login = $('#update_login_id').val();
+    let role = $('#update_role_id').val();
+    let id = $('#update_user_id').val();
+
+    if (!name || !login || !role) {
+      alert('Please complete all fields');
+      return;
+    }
+
+    $.ajax({
+      url: '{{ BASE_URL }}/update_user_response/',
+      type: 'GET',
+      data: { v_update_name_id: name, v_update_login_id: login, v_update_role_id: role, user_id: id },
+      success: function(data) {
+        if (data.success) {
+          alert('Successfully updated');
+          $('#userUpdateModal').modal('hide');
+          location.reload();
+        } else if (data.duplicate) {
+          alert('Duplicate entry for same login');
+        }
+      },
+      error: function() {
+        alert('Update failed. Try again.');
+      }
+    });
+  });
+</script>
+
+{% endblock %}

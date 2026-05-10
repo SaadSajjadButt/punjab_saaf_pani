@@ -1,0 +1,179 @@
+{% extends "ticket/main.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+
+    <!-- =================== Date Filter =================== -->
+    <form method="get" class="row mb-3 g-2 align-items-center">
+        <div class="col-auto">
+            <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+        </div>
+        <div class="col-auto">
+            <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </form>
+
+    <!-- =================== Top Stats Cards =================== -->
+    <div class="row mb-4">
+        {% for stat in stats %}
+        <div class="col-md-3 mb-3">
+            <div class="card text-white shadow" style="background: {{ stat.bg_color }};">
+                <div class="card-body">
+                    <h5 class="card-title">{{ stat.title }}</h5>
+                    <h2>{{ stat.count }}</h2>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- =================== Drilldown Charts =================== -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header">Zone → Division Tickets</div>
+                <div class="card-body">
+                    <canvas id="zoneChart"></canvas>
+                    <button id="zoneBackBtn" class="btn btn-sm btn-secondary mt-2" style="display:none;">Back to Zones</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header">District → City Tickets</div>
+                <div class="card-body">
+                    <canvas id="districtChart"></canvas>
+                    <button id="districtBackBtn" class="btn btn-sm btn-secondary mt-2" style="display:none;">Back to Districts</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================== Other Charts =================== -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header">Complaint Categories</div>
+                <div class="card-body">
+                    <canvas id="categoryPieChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header">Feedback Satisfaction</div>
+                <div class="card-body">
+                    <canvas id="feedbackChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================== Resolved Tickets Line Chart =================== -->
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header">Resolved Tickets Trend</div>
+                <div class="card-body">
+                    <canvas id="resolvedLineChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const colors = ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#C9CBCF'];
+
+// ---------- Zone Drilldown ----------
+const zoneCtx = document.getElementById('zoneChart').getContext('2d');
+let zoneChart = new Chart(zoneCtx, {
+    type: 'bar',
+    data: { labels: {{ zone_labels|safe }}, datasets: [{ label: 'Tickets', data: {{ zone_data|safe }}, backgroundColor: colors }] },
+    options: {
+        responsive:true,
+        plugins:{legend:{display:false}},
+        onClick:(evt,elements)=>{
+            if(elements.length>0){
+                const index=elements[0].index;
+                zoneChart.data.labels={{ division_drill_labels|safe }}[index];
+                zoneChart.data.datasets[0].data={{ division_drill_data|safe }}[index];
+                zoneChart.update();
+                document.getElementById('zoneBackBtn').style.display='inline-block';
+            }
+        }
+    }
+});
+document.getElementById('zoneBackBtn').onclick=()=>{
+    zoneChart.data.labels={{ zone_labels|safe }};
+    zoneChart.data.datasets[0].data={{ zone_data|safe }};
+    zoneChart.update();
+    document.getElementById('zoneBackBtn').style.display='none';
+};
+
+// ---------- District Drilldown ----------
+const districtCtx = document.getElementById('districtChart').getContext('2d');
+let districtChart = new Chart(districtCtx, {
+    type:'bar',
+    data: { labels: {{ district_labels|safe }}, datasets: [{ label:'Tickets', data:{{ district_data|safe }}, backgroundColor: colors }] },
+    options: {
+        responsive:true,
+        plugins:{legend:{display:false}},
+        onClick:(evt,elements)=>{
+            if(elements.length>0){
+                const index=elements[0].index;
+                districtChart.data.labels={{ city_drill_labels|safe }}[index];
+                districtChart.data.datasets[0].data={{ city_drill_data|safe }}[index];
+                districtChart.update();
+                document.getElementById('districtBackBtn').style.display='inline-block';
+            }
+        }
+    }
+});
+document.getElementById('districtBackBtn').onclick=()=>{
+    districtChart.data.labels={{ district_labels|safe }};
+    districtChart.data.datasets[0].data={{ district_data|safe }};
+    districtChart.update();
+    document.getElementById('districtBackBtn').style.display='none';
+};
+
+// ---------- Category Pie ----------
+new Chart(document.getElementById('categoryPieChart').getContext('2d'), {
+    type:'pie',
+    data:{labels:{{ category_labels|safe }}, datasets:[{data:{{ category_data|safe }}, backgroundColor: colors}]}
+});
+
+// ---------- Feedback Doughnut ----------
+new Chart(document.getElementById('feedbackChart').getContext('2d'), {
+    type:'doughnut',
+    data:{labels:['Satisfied','Dissatisfied'], datasets:[{data:{{ feedback_data|safe }}, backgroundColor:['#4BC0C0','#FF6384']}]}
+});
+
+// ---------- Resolved Tickets Line Chart ----------
+new Chart(document.getElementById('resolvedLineChart').getContext('2d'), {
+    type:'line',
+    data:{
+        labels: {{ resolved_dates|safe }},
+        datasets:[{
+            label:'Resolved Tickets',
+            data: {{ resolved_counts|safe }},
+            borderColor:'#36A2EB',
+            backgroundColor:'rgba(54,162,235,0.2)',
+            fill:true,
+            tension:0.3,
+            pointRadius:4
+        }]
+    },
+    options:{responsive:true, plugins:{legend:{display:true}}, scales:{y:{beginAtZero:true}}}
+});
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,232 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>ACMS | Velonic Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="ACMS Ticketing Dashboard" name="description" />
+    <meta content="Abacus" name="author" />
+
+    <script src="{%static 'plugins/jquery/jquery.min.js'%}"></script>
+
+    <!-- App favicon -->
+    <link rel="shortcut icon" href="{% static 'velonic/assets/images/favicon.ico' %}">
+
+    <!-- Vendor CSS -->
+    <link rel="stylesheet" href="{% static 'velonic/assets/vendor/daterangepicker/daterangepicker.css' %}">
+    <link rel="stylesheet" href="{% static 'velonic/assets/vendor/admin-resources/jquery.vectormap/jquery-jvectormap-1.2.2.css' %}">
+
+    <!-- App CSS -->
+    <link href="{% static 'velonic/assets/css/app.min.css' %}" rel="stylesheet" type="text/css" id="app-style" />
+    <link href="{% static 'velonic/assets/css/icons.min.css' %}" rel="stylesheet" type="text/css" />
+
+    <!-- Config JS -->
+    <script src="{% static 'velonic/assets/js/config.js' %}"></script>
+</head>
+
+<body>
+    <div class="wrapper">
+
+        <!-- ========== Topbar ========== -->
+        <div class="navbar-custom">
+            <div class="topbar container-fluid d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-1">
+
+                    <div class="logo-topbar">
+                        <a href="{% url 'home' %}" class="logo-light">
+                            <span class="logo-lg">
+                                <img src="{% static 'velonic/assets/images/logo.png' %}" alt="logo">
+                            </span>
+                            <span class="logo-sm">
+                                <img src="{% static 'velonic/assets/images/logo-sm.png' %}" alt="small logo">
+                            </span>
+                        </a>
+                    </div>
+
+                    <button class="button-toggle-menu"><i class="ri-menu-line"></i></button>
+
+                    <div class="app-search d-none d-lg-block">
+                        <form>
+                            <div class="input-group">
+                                <input type="search" class="form-control" placeholder="Search...">
+                                <span class="ri-search-line search-icon text-muted"></span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <ul class="topbar-menu d-flex align-items-center mb-0">
+                    <li class="nav-item me-3 text-muted">
+                        Welcome, <strong>{{ request.user.username|capfirst }}</strong>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle arrow-none nav-user" data-bs-toggle="dropdown" href="#">
+                            <span class="account-user-avatar">
+                                <img src="{% static 'velonic/assets/images/users/avatar-1.jpg' %}" alt="user" width="32" class="rounded-circle">
+                            </span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end dropdown-menu-animated">
+                            <a href="{% url 'logout' %}" class="dropdown-item">
+                                <i class="ri-logout-box-line me-2"></i> Logout
+                            </a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <!-- ========== Topbar End ========== -->
+
+        <!-- ========== Sidebar Start ========== -->
+        <div class="leftside-menu">
+                <span class="logo-lg">
+                    <span class="logo-lg">
+                    <div style="
+                        font-family: 'Poppins', sans-serif;
+                        font-size: 22px;
+                        font-weight: 700;
+                        text-align: center;
+                        padding: 18px 0;
+                        letter-spacing: 2px;
+                        background: linear-gradient(90deg, #4f46e5, #06b6d4);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        position: relative;
+                    ">
+                        ACMS
+
+                        <!-- subtle underline accent -->
+                        <div style="
+                            height: 3px;
+                            width: 40px;
+                            margin: 6px auto 0;
+                            border-radius: 10px;
+                            background: linear-gradient(90deg, #4f46e5, #06b6d4);
+                            opacity: 0.7;
+                        "></div>
+                    </div>
+                        </span>
+                </span>        
+            </a>
+
+            <div class="h-100" id="leftside-menu-container" data-simplebar>
+                <ul class="side-nav">
+
+
+                    <li class="side-nav-item">
+                        <a href="{% url 'home' %}" class="side-nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                            <i class="ri-dashboard-3-line"></i>
+                            <span> Home </span>
+                        </a>
+                    </li>
+
+                    {% if request.user.role.id == 1 or request.user.role.id == 3 or request.user.role.id == 2  %}
+       
+                    <li class="side-nav-item">
+                        <a href="{% url 'dashboard' %}" class="side-nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                            <i class="ri-bar-chart-2-line"></i>
+                            <span> Dashboard </span>
+                        </a>
+                    </li>
+
+                    {%endif%}
+
+                        
+                    {% if request.user.role.id == 1 or request.user.role.id == 2 or request.user.role.id == 3 %}
+                    <li class="side-nav-item">
+                        <a href="{% url 'display_users' %}" class="side-nav-link {% if request.resolver_match.url_name == 'display_users' or request.resolver_match.url_name == 'display_add_user' %}active{% endif %}">
+                            <i class="ri-user-settings-line"></i>
+                            <span> Users </span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+
+                    {% if request.user.role.id == 1 or request.user.role.id == 5 or request.user.role.id == 3 or request.user.role.id == 2 %}
+
+                    <li class="side-nav-item">
+                        <a href="{% url 'launchtickets' %}" class="side-nav-link {% if request.resolver_match.url_name == 'launchtickets' %}active{% endif %}">
+                            <i class="ri-add-circle-line"></i>
+                            <span> Add Ticket </span>
+                        </a>
+                    </li>
+
+                    {% endif %}
+
+
+                    {% if request.user.role.id == 1 or request.user.role.id == 4 or request.user.role.id == 3 or request.user.role.id == 2 or request.user.role.id == 5%}
+
+                    <li class="side-nav-item">
+                        <a href="{% url 'filtertickets' %}" class="side-nav-link {% if request.resolver_match.url_name == 'filtertickets' %}active{% endif %}">
+                            <i class="ri-reply-line"></i>
+                            <span> Respond Tickets </span>
+                        </a>
+                    </li>
+
+                     {% endif %}
+
+                    {% if request.user.role.id == 1 or request.user.role.id == 3 or request.user.role.id == 2 or request.user.role.id == 5%}
+
+                    <li class="side-nav-item">
+                        <a href="{% url 'filterfeedbacks' %}" class="side-nav-link {% if request.resolver_match.url_name == 'filterfeedbacks' %}active{% endif %}">
+                            <i class="ri-chat-1-line"></i>
+                            <span> Feedback </span>
+                        </a>
+                    </li>
+
+                    {%endif%}
+
+
+                      {% if request.user.role.id == 1 or request.user.role.id == 2 or request.user.role.id == 3 %}
+
+                    <li class="side-nav-item">
+                        <a href="{% url 'display_report_ticket' %}" class="side-nav-link {% if request.resolver_match.url_name == 'display_report_ticket' %}active{% endif %}">
+                            <i class="ri-file-chart-line"></i>
+                            <span> Reports </span>
+                        </a>
+                    </li>
+                    {%endif%}
+
+                    <li class="side-nav-item">
+                        <a href="{% url 'password_reset' %}" class="side-nav-link {% if request.resolver_match.url_name == 'password_reset' %}active{% endif %}">
+                            <i class="ri-key-line"></i>
+                            <span> Password Reset </span>
+                        </a>
+                    </li>
+
+                </ul>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <!-- ========== Sidebar End ========== -->
+
+        <!-- ========== Content Start ========== -->
+        <div class="content-page">
+            <div class="content">
+                <div class="container-fluid">
+                    {% block content %}
+                    <h4 class="page-title">Welcome!</h4>
+                    {% endblock %}
+                </div>
+            </div>
+
+            <footer class="footer text-center">
+                <script>document.write(new Date().getFullYear())</script> © Abacus Ticketing System
+            </footer>
+        </div>
+        <!-- ========== Content End ========== -->
+    </div>
+
+    <!-- Scripts -->
+    <script src="{% static 'velonic/assets/js/vendor.min.js' %}"></script>
+    <script src="{% static 'velonic/assets/vendor/daterangepicker/moment.min.js' %}"></script>
+    <script src="{% static 'velonic/assets/vendor/daterangepicker/daterangepicker.js' %}"></script>
+    <script src="{% static 'velonic/assets/vendor/apexcharts/apexcharts.min.js' %}"></script>
+    <script src="{% static 'velonic/assets/vendor/admin-resources/jquery.vectormap/jquery-jvectormap-1.2.2.min.js' %}"></script>
+    <script src="{% static 'velonic/assets/vendor/admin-resources/jquery.vectormap/maps/jquery-jvectormap-world-mill-en.js' %}"></script>
+    <script src="{% static 'velonic/assets/js/pages/dashboard.js' %}"></script>
+    <script src="{% static 'velonic/assets/js/app.min.js' %}"></script>
+
+</body>
+</html>

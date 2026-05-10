@@ -1,0 +1,114 @@
+{% extends "ticket/main.html" %}
+
+{% block content %}
+<div class="container-fluid">
+
+  <!-- Page Title -->
+  <div class="page-title-box">
+    <div class="page-title-right">
+      <a href="{% url 'display_users' %}" class="btn btn-primary btn-sm">
+        <i class="ri-arrow-go-back-line"></i> Back to Users
+      </a>
+    </div>
+    <h4 class="page-title">Add User</h4>
+  </div>
+
+  <!-- Alerts -->
+  {% if error %}
+  <div class="alert alert-danger text-center" id="danger_id">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  {% if success %}
+  <div class="alert alert-success text-center" id="success_id">
+    {{ success }}
+  </div>
+  {% endif %}
+
+  <!-- Add User Form Card -->
+  <div class="card">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <h5 class="card-title mb-0">Add New User</h5>
+      <a href="{% url 'display_users' %}" class="text-white fs-5">
+        <i class="ri-refresh-line"></i>
+      </a>
+    </div>
+
+    <div class="card-body">
+
+      <form method="POST" action="{% url 'add_users' %}" autocomplete="off">
+        {% csrf_token %}
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label for="name" class="form-label">Name</label>
+            <div class="input-group">
+              <input type="text" class="form-control" id="name" name="name" placeholder="Enter name" required>
+              <span class="input-group-text"><i class="ri-user-line"></i></span>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <label for="login" class="form-label">Login</label>
+            <div class="input-group">
+              <input type="text" class="form-control" id="login" name="login" placeholder="Enter login ID" required>
+              <span class="input-group-text"><i class="ri-id-card-line"></i></span>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <label for="email" class="form-label">Email</label>
+            <div class="input-group">
+              <input type="email" class="form-control" id="email" name="email" placeholder="Enter email">
+              <span class="input-group-text"><i class="ri-mail-line"></i></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label for="role_id" class="form-label">Select a Role</label>
+            <select id="role_id" name="role_id" class="form-select" required>
+              <option value="">Select Role</option>
+              {% for us in all_roles %}
+                {% if us.id != 1%}
+                  <option value="{{ us.id }}">{{ us.role_title }}</option>
+                {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label for="password1" class="form-label">Password</label>
+            <div class="input-group">
+              <input type="password" class="form-control" id="password1" name="password1" placeholder="Enter Password" required>
+              <span class="input-group-text"><i class="ri-lock-2-line"></i></span>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <label for="password2" class="form-label">Re-enter Password</label>
+            <div class="input-group">
+              <input type="password" class="form-control" id="password2" name="password2" placeholder="Confirm Password" required>
+              <span class="input-group-text"><i class="ri-lock-password-line"></i></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-end mt-3">
+          <button type="submit" class="btn btn-success">
+            <i class="ri-user-add-line me-1"></i> Add User
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<!-- Script for auto-hide alerts -->
+<script type="text/javascript">
+  $("#danger_id, #success_id").delay(3000).fadeOut();
+</script>
+{% endblock %}
