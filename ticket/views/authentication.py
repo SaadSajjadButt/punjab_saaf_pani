@@ -10,7 +10,7 @@ import hashlib
 def login(request):
     if request.method == 'POST':
         login_value = request.POST['login']
-        password = request.POST['password']
+        password = request.POST['password']   ### Testing comments
 
         user = auth.authenticate(login=login_value, password=password)
 
